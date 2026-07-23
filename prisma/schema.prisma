@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id           String          @id @default(uuid())
+  name         String
+  website      String?
+  logoUrl      String?
+  stage        String          @default("Lead")
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  contacts     Contact[]
+  interactions Interaction[]
+  memories     AccountMemory[]
+  tasks        Task[]
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      String?
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Interaction {
+  id        String   @id @default(uuid())
+  type      String   // EMAIL, SLACK, TRANSCRIPT
+  channel   String?  
+  content   String
+  sender    String?  
+  timestamp DateTime @default(now())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AccountMemory {
+  id              String   @id @default(uuid())
+  version         Int      @default(1)
+  summary         String
+  pricing         String?
+  competitors     String?
+  featureRequests String?
+  accountId       String
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+}
+
+model Task {
+  id        String    @id @default(uuid())
+  title     String
+  completed Boolean   @default(false)
+  dueDate   DateTime?
+  accountId String
+  account   Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
