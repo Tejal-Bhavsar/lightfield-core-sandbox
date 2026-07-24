@@ -4,6 +4,32 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { analyzeInteraction } from '@/lib/llm';
 
+function parseBudget(pricingText: string | null): number {
+  if (!pricingText) return 0;
+  
+  const clean = pricingText.toLowerCase();
+  
+  // Look for "$Xk" or "X k" (multiplier 1000)
+  const kMatch = clean.match(/\$(\d+(?:\.\d+)?)\s*k/);
+  if (kMatch && kMatch[1]) {
+    return parseFloat(kMatch[1]) * 1000;
+  }
+  
+  // Look for "$X,000" or "$X"
+  const digitMatch = clean.match(/\$(\d{1,3}(?:,\d{3})+|\d+)/);
+  if (digitMatch && digitMatch[1]) {
+    return parseFloat(digitMatch[1].replace(/,/g, ''));
+  }
+  
+  // Look for generic number sequence of size 4-8
+  const numbers = clean.replace(/,/g, '').match(/\b\d{4,8}\b/g);
+  if (numbers && numbers[0]) {
+    return parseFloat(numbers[0]);
+  }
+  
+  return 0;
+}
+
 const typeDefs = `#graphql
   type Account {
     id: ID!
@@ -17,6 +43,7 @@ const typeDefs = `#graphql
     interactions: [Interaction!]!
     memories: [AccountMemory!]!
     tasks: [Task!]!
+    opportunity: Opportunity
   }
 
   type Contact {
@@ -61,6 +88,18 @@ const typeDefs = `#graphql
     updatedAt: String!
   }
 
+  type Opportunity {
+    id: ID!
+    title: String!
+    value: Float!
+    stage: String!
+    closeDate: String
+    accountId: ID!
+    createdAt: String!
+    updatedAt: String!
+    account: Account
+  }
+
   type Citation {
     id: ID!
     type: String!
@@ -81,6 +120,7 @@ const typeDefs = `#graphql
     account(id: ID!): Account
     interactions(accountId: ID!): [Interaction!]!
     tasks(accountId: ID!): [Task!]!
+    opportunities: [Opportunity!]!
     searchMemories(query: String!): SearchResult!
   }
 
@@ -96,6 +136,8 @@ const typeDefs = `#graphql
 
     toggleTask(id: ID!, completed: Boolean!): Task!
 
+    updateOpportunityStage(id: ID!, stage: String!): Opportunity!
+
     simulateHubSpotMigration(csvContent: String!): [Account!]!
     
     resetDatabase: Boolean!
@@ -103,6 +145,14 @@ const typeDefs = `#graphql
 `;
 
 const resolvers = {
+  Account: {
+    opportunity: async (parent: any) => {
+      return prisma.opportunity.findUnique({
+        where: { accountId: parent.id },
+      });
+    },
+  },
+
   Query: {
     accounts: async () => {
       return prisma.account.findMany({
@@ -111,6 +161,7 @@ const resolvers = {
           interactions: { orderBy: { timestamp: 'desc' } },
           memories: { orderBy: { version: 'desc' } },
           tasks: { orderBy: { createdAt: 'desc' } },
+          opportunity: true,
         },
         orderBy: { updatedAt: 'desc' },
       });
@@ -124,6 +175,7 @@ const resolvers = {
           interactions: { orderBy: { timestamp: 'desc' } },
           memories: { orderBy: { version: 'desc' } },
           tasks: { orderBy: { createdAt: 'desc' } },
+          opportunity: true,
         },
       });
     },
@@ -139,6 +191,13 @@ const resolvers = {
       return prisma.task.findMany({
         where: { accountId },
         orderBy: { createdAt: 'desc' },
+      });
+    },
+
+    opportunities: async () => {
+      return prisma.opportunity.findMany({
+        include: { account: true },
+        orderBy: { updatedAt: 'desc' },
       });
     },
 
@@ -245,6 +304,22 @@ const resolvers = {
         });
       }
 
+      // Create/Update Opportunity and parse budget
+      const budgetValue = parseBudget(aiResult.pricing);
+      await prisma.opportunity.upsert({
+        where: { accountId: account.id },
+        update: { 
+          stage: aiResult.stage,
+          value: budgetValue > 0 ? budgetValue : undefined
+        },
+        create: {
+          title: `${finalAccountName} Enterprise Deal`,
+          stage: aiResult.stage,
+          value: budgetValue,
+          accountId: account.id,
+        }
+      });
+
       // 3. Create Contact if sender info exists
       if (sender && senderEmail) {
         await prisma.contact.upsert({
@@ -311,8 +386,22 @@ const resolvers = {
           interactions: { orderBy: { timestamp: 'desc' } },
           memories: { orderBy: { version: 'desc' } },
           tasks: { orderBy: { createdAt: 'desc' } },
+          opportunity: true,
         },
       });
+    },
+
+    updateOpportunityStage: async (_: any, { id, stage }: { id: string; stage: string }) => {
+      const opportunity = await prisma.opportunity.update({
+        where: { id },
+        data: { stage },
+      });
+      // Sync back to Account stage
+      await prisma.account.update({
+        where: { id: opportunity.accountId },
+        data: { stage },
+      });
+      return opportunity;
     },
 
     toggleTask: async (_: any, { id, completed }: { id: string; completed: boolean }) => {
@@ -396,6 +485,19 @@ const resolvers = {
           },
         });
 
+        // Upsert opportunity
+        const budgetValue = parseBudget(note);
+        await prisma.opportunity.upsert({
+          where: { accountId: account.id },
+          update: { stage },
+          create: {
+            title: `${companyName} Opportunity`,
+            stage: stage,
+            value: budgetValue,
+            accountId: account.id,
+          }
+        });
+
         const fullAcc = await prisma.account.findUnique({
           where: { id: account.id },
           include: {
@@ -403,6 +505,7 @@ const resolvers = {
             interactions: true,
             memories: true,
             tasks: true,
+            opportunity: true,
           },
         });
         accountsCreated.push(fullAcc);
@@ -413,6 +516,7 @@ const resolvers = {
 
     resetDatabase: async () => {
       try {
+        await prisma.opportunity.deleteMany({});
         await prisma.task.deleteMany({});
         await prisma.accountMemory.deleteMany({});
         await prisma.interaction.deleteMany({});

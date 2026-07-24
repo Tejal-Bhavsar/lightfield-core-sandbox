@@ -88,10 +88,17 @@ export function Sidebar() {
               <Building2 className="w-4 h-4 shrink-0" />
               <span>Accounts</span>
             </Link>
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium text-neutral-400 cursor-not-allowed">
+            <Link 
+              href="/opportunities" 
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/opportunities') 
+                  ? 'bg-white text-lf-primary border border-lf-border shadow-xs' 
+                  : 'text-neutral-500 hover:bg-neutral-200/50 hover:text-lf-primary'
+              }`}
+            >
               <TrendingUp className="w-4 h-4 shrink-0" />
               <span>Opportunities</span>
-            </div>
+            </Link>
             <div className="flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium text-neutral-400 cursor-not-allowed">
               <Users className="w-4 h-4 shrink-0" />
               <span>Contacts</span>
