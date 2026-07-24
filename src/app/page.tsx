@@ -38,6 +38,10 @@ const GET_DASHBOARD_DATA = gql`
         sender
         timestamp
       }
+      memories {
+        id
+        summary
+      }
     }
   }
 `;
@@ -437,7 +441,7 @@ export default function Dashboard() {
                       </div>
                       
                       <div className="text-[11px] text-neutral-500 line-clamp-2 mt-2 italic">
-                        "{acc.memories[0]?.summary || 'No memory recorded yet.'}"
+                        "{acc.memories?.[0]?.summary || 'No memory recorded yet.'}"
                       </div>
                     </div>
 
