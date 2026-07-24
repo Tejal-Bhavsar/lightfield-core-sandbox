@@ -66,6 +66,25 @@ const INGEST_ACTIVITY = gql`
       id
       name
       stage
+      website
+      updatedAt
+      tasks {
+        id
+        title
+        completed
+        dueDate
+      }
+      interactions {
+        id
+        type
+        content
+        sender
+        timestamp
+      }
+      memories {
+        id
+        summary
+      }
     }
   }
 `;
@@ -200,11 +219,11 @@ export default function Dashboard() {
   // Compile active tasks and recent activities
   const allAccounts = data?.accounts || [];
   const activeTasks = allAccounts.flatMap((acc: any) => 
-    acc.tasks.map((t: any) => ({ ...t, accountName: acc.name }))
+    (acc.tasks || []).map((t: any) => ({ ...t, accountName: acc.name }))
   ).filter((t: any) => !t.completed).slice(0, 5);
 
   const recentInteractions = allAccounts.flatMap((acc: any) =>
-    acc.interactions.map((i: any) => ({ ...i, accountName: acc.name }))
+    (acc.interactions || []).map((i: any) => ({ ...i, accountName: acc.name }))
   ).sort((a: any, b: any) => b.timestamp - a.timestamp).slice(0, 5);
 
   return (
@@ -419,8 +438,8 @@ export default function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {allAccounts.map((acc: any) => {
-                const totalTasks = acc.tasks.length;
-                const completedTasks = acc.tasks.filter((t: any) => t.completed).length;
+                const totalTasks = acc.tasks?.length || 0;
+                const completedTasks = acc.tasks?.filter((t: any) => t.completed).length || 0;
                 
                 return (
                   <div key={acc.id} className="border border-lf-border p-4 rounded-xl flex flex-col justify-between hover:border-lf-primary/20 hover:shadow-xs transition-all bg-white">
