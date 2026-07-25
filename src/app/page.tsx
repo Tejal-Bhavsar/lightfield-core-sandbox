@@ -56,13 +56,6 @@ export default function LandingPage() {
       {/* Hero Section */}
       <main className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-16 text-center space-y-8">
         
-        {/* Role Match Tag */}
-        <div className="inline-flex items-center space-x-2 bg-white border border-neutral-200/80 rounded-full px-3 py-1 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-neutral-500" />
-          <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">
-            AI Product Engineer, New Grad Sandbox
-          </span>
-        </div>
 
         {/* Title */}
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-neutral-900 max-w-2xl mx-auto leading-[1.1]">
