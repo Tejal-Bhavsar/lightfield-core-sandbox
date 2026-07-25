@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ApolloClientProvider } from "@/components/ApolloProvider";
-import { Sidebar } from "@/components/Sidebar";
+import { AppLayoutWrapper } from "@/components/AppLayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,12 +29,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex bg-background text-foreground h-screen overflow-hidden">
+      <body className="min-h-full bg-background text-foreground antialiased font-sans">
         <ApolloClientProvider>
-          <Sidebar />
-          <main className="flex-1 flex flex-col h-full min-w-0 bg-background overflow-hidden">
+          <AppLayoutWrapper>
             {children}
-          </main>
+          </AppLayoutWrapper>
         </ApolloClientProvider>
       </body>
     </html>

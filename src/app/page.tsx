@@ -2,15 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  ArrowRight, 
-  Sparkles, 
-  TrendingUp, 
-  Cpu, 
-  Database, 
-  Search, 
-  GitBranch, 
-  ShieldCheck, 
+import {
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  Cpu,
+  Database,
+  Search,
+  GitBranch,
+  ShieldCheck,
   FileText,
   Building,
   Mail,
@@ -33,11 +33,11 @@ export default function LandingPage() {
           <span className="text-sm uppercase tracking-widest font-mono">Lightfield</span>
           <span className="text-[10px] bg-neutral-200 border border-neutral-300 rounded px-1.5 py-0.2 font-bold text-neutral-600">SANDBOX</span>
         </div>
-        
+
         <div className="flex items-center space-x-4">
-          <a 
-            href="https://github.com/Tejal-Bhavsar/lightfield-core-sandbox" 
-            target="_blank" 
+          <a
+            href="https://github.com/Tejal-Bhavsar/lightfield-core-sandbox"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition-colors"
           >
@@ -55,7 +55,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <main className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-16 text-center space-y-8">
-        
+
 
         {/* Title */}
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-neutral-900 max-w-2xl mx-auto leading-[1.1]">
@@ -96,7 +96,7 @@ export default function LandingPage() {
             Sandbox Technical Highlights
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
+
             {/* Card 1 */}
             <div className="bg-white border border-neutral-200/60 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition-shadow space-y-3">
               <div className="p-2 bg-neutral-50 border border-neutral-200 rounded-lg w-fit">
@@ -153,13 +153,13 @@ export default function LandingPage() {
               <UserCheck className="w-3 h-3" />
               <span>Created by Tejal Bhavsar</span>
             </div>
-            
+
             <h3 className="text-lg font-bold text-neutral-900">
               Why I built this sandbox
             </h3>
-            
+
             <p className="text-xs text-neutral-500 leading-relaxed">
-              I am an **MS candidate in AI & Data Science** at UMBC with **4+ years of full-stack engineering** experience. I engineered this sandbox to prove my capability and readiness for the **AI Product Engineer (New Grad)** role at Lightfield. 
+              I am a full-stack engineer with 4+ years of experience MS Grad from University of Maryland, Baltimore County and this sandbox to prove my capability and readiness for the AI Product Engineer (New Grad) role at Lightfield.
             </p>
 
             <p className="text-xs text-neutral-500 leading-relaxed">
