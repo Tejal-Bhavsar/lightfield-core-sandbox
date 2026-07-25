@@ -151,7 +151,7 @@ export default function OpportunitiesPipeline() {
               Opportunities are automatically generated when you ingest conversations that contain pricing/budget details. Try parsing a simulation template on the Dashboard!
             </p>
             <Link 
-              href="/"
+              href="/dashboard"
               className="mt-5 px-4 py-2 bg-lf-primary text-white hover:bg-lf-primary-hover font-semibold rounded-lg text-xs shadow-xs transition-colors"
             >
               Go Ingest Activity

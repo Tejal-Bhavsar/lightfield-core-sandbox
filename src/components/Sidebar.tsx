@@ -46,9 +46,9 @@ export function Sidebar() {
         {/* Core Pages */}
         <div className="space-y-1">
           <Link 
-            href="/" 
+            href="/dashboard" 
             className={`flex items-center justify-between px-3 py-2 rounded-md font-medium transition-colors ${
-              isActive('/') 
+              isActive('/dashboard') 
                 ? 'bg-white text-lf-primary border border-lf-border shadow-xs' 
                 : 'text-neutral-500 hover:bg-neutral-200/50 hover:text-lf-primary'
             }`}
