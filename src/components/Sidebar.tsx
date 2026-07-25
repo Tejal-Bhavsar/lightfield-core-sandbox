@@ -99,10 +99,17 @@ export function Sidebar() {
               <TrendingUp className="w-4 h-4 shrink-0" />
               <span>Opportunities</span>
             </Link>
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium text-neutral-400 cursor-not-allowed">
+            <Link 
+              href="/contacts" 
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/contacts') 
+                  ? 'bg-white text-lf-primary border border-lf-border shadow-xs' 
+                  : 'text-neutral-500 hover:bg-neutral-200/50 hover:text-lf-primary'
+              }`}
+            >
               <Users className="w-4 h-4 shrink-0" />
               <span>Contacts</span>
-            </div>
+            </Link>
           </div>
         </div>
 
@@ -110,18 +117,39 @@ export function Sidebar() {
         <div>
           <h3 className="px-3 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">Resources</h3>
           <div className="space-y-1">
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium text-neutral-400 cursor-not-allowed">
+            <Link 
+              href="/tasks" 
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/tasks') 
+                  ? 'bg-white text-lf-primary border border-lf-border shadow-xs' 
+                  : 'text-neutral-500 hover:bg-neutral-200/50 hover:text-lf-primary'
+              }`}
+            >
               <CheckSquare className="w-4 h-4 shrink-0" />
               <span>Tasks</span>
-            </div>
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium text-neutral-400 cursor-not-allowed">
+            </Link>
+            <Link 
+              href="/meetings" 
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/meetings') 
+                  ? 'bg-white text-lf-primary border border-lf-border shadow-xs' 
+                  : 'text-neutral-500 hover:bg-neutral-200/50 hover:text-lf-primary'
+              }`}
+            >
               <Video className="w-4 h-4 shrink-0" />
               <span>Meetings</span>
-            </div>
-            <div className="flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium text-neutral-400 cursor-not-allowed">
+            </Link>
+            <Link 
+              href="/notes" 
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-md font-medium transition-colors ${
+                isActive('/notes') 
+                  ? 'bg-white text-lf-primary border border-lf-border shadow-xs' 
+                  : 'text-neutral-500 hover:bg-neutral-200/50 hover:text-lf-primary'
+              }`}
+            >
               <FileText className="w-4 h-4 shrink-0" />
               <span>Notes</span>
-            </div>
+            </Link>
           </div>
         </div>
 

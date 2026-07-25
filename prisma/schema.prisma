@@ -23,6 +23,8 @@ model Account {
   memories     AccountMemory[]
   tasks        Task[]
   opportunity  Opportunity?
+  meetings     Meeting[]
+  notes        Note[]
 }
 
 model Contact {
@@ -81,5 +83,27 @@ model Opportunity {
   account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model Meeting {
+  id          String   @id @default(uuid())
+  title       String
+  date        DateTime @default(now())
+  summary     String?
+  transcript  String?
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 

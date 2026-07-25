@@ -44,6 +44,8 @@ const typeDefs = `#graphql
     memories: [AccountMemory!]!
     tasks: [Task!]!
     opportunity: Opportunity
+    meetings: [Meeting!]!
+    notes: [Note!]!
   }
 
   type Contact {
@@ -54,6 +56,7 @@ const typeDefs = `#graphql
     accountId: ID!
     createdAt: String!
     updatedAt: String!
+    account: Account
   }
 
   type Interaction {
@@ -86,6 +89,7 @@ const typeDefs = `#graphql
     accountId: ID!
     createdAt: String!
     updatedAt: String!
+    account: Account
   }
 
   type Opportunity {
@@ -94,6 +98,28 @@ const typeDefs = `#graphql
     value: Float!
     stage: String!
     closeDate: String
+    accountId: ID!
+    createdAt: String!
+    updatedAt: String!
+    account: Account
+  }
+
+  type Meeting {
+    id: ID!
+    title: String!
+    date: String!
+    summary: String
+    transcript: String
+    accountId: ID!
+    createdAt: String!
+    updatedAt: String!
+    account: Account
+  }
+
+  type Note {
+    id: ID!
+    title: String!
+    content: String!
     accountId: ID!
     createdAt: String!
     updatedAt: String!
@@ -121,6 +147,10 @@ const typeDefs = `#graphql
     interactions(accountId: ID!): [Interaction!]!
     tasks(accountId: ID!): [Task!]!
     opportunities: [Opportunity!]!
+    allContacts: [Contact!]!
+    allTasks: [Task!]!
+    meetings: [Meeting!]!
+    notes: [Note!]!
     searchMemories(query: String!): SearchResult!
   }
 
@@ -138,6 +168,14 @@ const typeDefs = `#graphql
 
     updateOpportunityStage(id: ID!, stage: String!): Opportunity!
 
+    createContact(name: String!, email: String!, role: String, accountId: ID!): Contact!
+
+    createTask(title: String!, accountId: ID!, dueDate: String): Task!
+
+    createMeeting(title: String!, summary: String, transcript: String, accountId: ID!): Meeting!
+
+    createNote(title: String!, content: String!, accountId: ID!): Note!
+
     simulateHubSpotMigration(csvContent: String!): [Account!]!
     
     resetDatabase: Boolean!
@@ -151,6 +189,42 @@ const resolvers = {
         where: { accountId: parent.id },
       });
     },
+    meetings: async (parent: any) => {
+      return prisma.meeting.findMany({
+        where: { accountId: parent.id },
+        orderBy: { date: 'desc' },
+      });
+    },
+    notes: async (parent: any) => {
+      return prisma.note.findMany({
+        where: { accountId: parent.id },
+        orderBy: { createdAt: 'desc' },
+      });
+    },
+  },
+
+  Contact: {
+    account: async (parent: any) => {
+      return prisma.account.findUnique({ where: { id: parent.accountId } });
+    },
+  },
+
+  Task: {
+    account: async (parent: any) => {
+      return prisma.account.findUnique({ where: { id: parent.accountId } });
+    },
+  },
+
+  Meeting: {
+    account: async (parent: any) => {
+      return prisma.account.findUnique({ where: { id: parent.accountId } });
+    },
+  },
+
+  Note: {
+    account: async (parent: any) => {
+      return prisma.account.findUnique({ where: { id: parent.accountId } });
+    },
   },
 
   Query: {
@@ -162,6 +236,8 @@ const resolvers = {
           memories: { orderBy: { version: 'desc' } },
           tasks: { orderBy: { createdAt: 'desc' } },
           opportunity: true,
+          meetings: true,
+          notes: true,
         },
         orderBy: { updatedAt: 'desc' },
       });
@@ -176,6 +252,8 @@ const resolvers = {
           memories: { orderBy: { version: 'desc' } },
           tasks: { orderBy: { createdAt: 'desc' } },
           opportunity: true,
+          meetings: true,
+          notes: true,
         },
       });
     },
@@ -198,6 +276,34 @@ const resolvers = {
       return prisma.opportunity.findMany({
         include: { account: true },
         orderBy: { updatedAt: 'desc' },
+      });
+    },
+
+    allContacts: async () => {
+      return prisma.contact.findMany({
+        include: { account: true },
+        orderBy: { name: 'asc' },
+      });
+    },
+
+    allTasks: async () => {
+      return prisma.task.findMany({
+        include: { account: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    },
+
+    meetings: async () => {
+      return prisma.meeting.findMany({
+        include: { account: true },
+        orderBy: { date: 'desc' },
+      });
+    },
+
+    notes: async () => {
+      return prisma.note.findMany({
+        include: { account: true },
+        orderBy: { createdAt: 'desc' },
       });
     },
 
@@ -514,10 +620,78 @@ const resolvers = {
       return accountsCreated;
     },
 
+    createContact: async (_: any, { name, email, role, accountId }: { name: string; email: string; role?: string; accountId: string }) => {
+      return prisma.contact.create({
+        data: { name, email, role: role || null, accountId },
+      });
+    },
+
+    createTask: async (_: any, { title, accountId, dueDate }: { title: string; accountId: string; dueDate?: string }) => {
+      return prisma.task.create({
+        data: { title, accountId, dueDate: dueDate ? new Date(dueDate) : null },
+      });
+    },
+
+    createMeeting: async (_: any, { title, summary, transcript, accountId }: { title: string; summary?: string; transcript?: string; accountId: string }) => {
+      const meeting = await prisma.meeting.create({
+        data: { title, summary: summary || null, transcript: transcript || null, accountId },
+      });
+
+      if (transcript) {
+        const aiResult = await analyzeInteraction(transcript);
+        const latestMemory = await prisma.accountMemory.findFirst({
+          where: { accountId },
+          orderBy: { version: 'desc' },
+        });
+        const nextVersion = latestMemory ? latestMemory.version + 1 : 1;
+        
+        await prisma.accountMemory.create({
+          data: {
+            accountId,
+            version: nextVersion,
+            summary: aiResult.summary,
+            pricing: aiResult.pricing,
+            competitors: aiResult.competitors,
+            featureRequests: aiResult.featureRequests,
+          },
+        });
+
+        await prisma.account.update({
+          where: { id: accountId },
+          data: { stage: aiResult.stage },
+        });
+
+        const budgetValue = parseBudget(aiResult.pricing);
+        await prisma.opportunity.upsert({
+          where: { accountId },
+          update: { stage: aiResult.stage, value: budgetValue > 0 ? budgetValue : undefined },
+          create: { title: `${title} Opportunity`, stage: aiResult.stage, value: budgetValue, accountId },
+        });
+
+        if (aiResult.tasks && aiResult.tasks.length > 0) {
+          for (const t of aiResult.tasks) {
+            await prisma.task.create({
+              data: { accountId, title: t.title, dueDate: t.dueDate ? new Date(t.dueDate) : null },
+            });
+          }
+        }
+      }
+
+      return meeting;
+    },
+
+    createNote: async (_: any, { title, content, accountId }: { title: string; content: string; accountId: string }) => {
+      return prisma.note.create({
+        data: { title, content, accountId },
+      });
+    },
+
     resetDatabase: async () => {
       try {
         await prisma.opportunity.deleteMany({});
         await prisma.task.deleteMany({});
+        await prisma.meeting.deleteMany({});
+        await prisma.note.deleteMany({});
         await prisma.accountMemory.deleteMany({});
         await prisma.interaction.deleteMany({});
         await prisma.contact.deleteMany({});
