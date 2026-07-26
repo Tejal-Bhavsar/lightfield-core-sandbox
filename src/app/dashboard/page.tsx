@@ -247,7 +247,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content Area (Scrollable) */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-auto p-6 space-y-6">
         
         {/* Quick Simulator Templates */}
         <section className="bg-white border border-lf-border rounded-xl p-5 shadow-xs">
