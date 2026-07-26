@@ -5,6 +5,9 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
+# Set default SQLite database connection string
+ENV DATABASE_URL="file:./dev.db"
+
 # Copy package descriptors
 COPY package*.json ./
 
