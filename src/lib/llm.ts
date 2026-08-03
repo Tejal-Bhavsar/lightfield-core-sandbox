@@ -43,15 +43,15 @@ Interaction text to analyze:
  * Fallback local NLP analyzer when API keys are missing.
  * Scans text for keywords to generate a realistic structured representation.
  */
-function localMockAnalyze(content: string): LLMSynthesisResult {
+function localMockAnalyze(content: string, explicitAccountName?: string): LLMSynthesisResult {
   const contentLower = content.toLowerCase();
   
   // Extract Account Name
-  let accountName = "Unknown Account";
+  let accountName = explicitAccountName || "Unknown Account";
   const accountMatch = content.match(/(?:at|from|with|representing)\s+([A-Z][a-zA-Z0-9\s]{2,20})(?:\s+|,|\.|$)/);
-  if (accountMatch && accountMatch[1]) {
+  if (accountMatch && accountMatch[1] && !explicitAccountName) {
     accountName = accountMatch[1].trim();
-  } else {
+  } else if (!explicitAccountName) {
     // Look for email domains or signatures
     const emailMatch = content.match(/@([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/);
     if (emailMatch && emailMatch[1]) {
@@ -144,14 +144,14 @@ function localMockAnalyze(content: string): LLMSynthesisResult {
   };
 }
 
-export async function analyzeInteraction(content: string): Promise<LLMSynthesisResult> {
+export async function analyzeInteraction(content: string, explicitAccountName?: string): Promise<LLMSynthesisResult> {
   const provider = process.env.LLM_PROVIDER || 'huggingface';
   
   if (provider === 'gemini') {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.warn("LLM_PROVIDER is set to gemini, but GEMINI_API_KEY is missing. Using offline parser.");
-      return localMockAnalyze(content);
+      return localMockAnalyze(content, explicitAccountName);
     }
     
     try {
@@ -167,14 +167,14 @@ export async function analyzeInteraction(content: string): Promise<LLMSynthesisR
       return JSON.parse(text) as LLMSynthesisResult;
     } catch (e) {
       console.error("Gemini API call failed, falling back to offline parser:", e);
-      return localMockAnalyze(content);
+      return localMockAnalyze(content, explicitAccountName);
     }
   } else {
     // Default to Hugging Face
     const hfToken = process.env.HF_API_TOKEN;
     if (!hfToken) {
       console.warn("LLM_PROVIDER is set to huggingface, but HF_API_TOKEN is missing. Using offline parser.");
-      return localMockAnalyze(content);
+      return localMockAnalyze(content, explicitAccountName);
     }
     
     try {
@@ -196,7 +196,7 @@ export async function analyzeInteraction(content: string): Promise<LLMSynthesisR
       return JSON.parse(cleanJson) as LLMSynthesisResult;
     } catch (e) {
       console.error("Hugging Face API call failed, falling back to offline parser:", e);
-      return localMockAnalyze(content);
+      return localMockAnalyze(content, explicitAccountName);
     }
   }
 }

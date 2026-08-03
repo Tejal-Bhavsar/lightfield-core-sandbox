@@ -385,7 +385,7 @@ const resolvers = {
       }
     ) => {
       // 1. Analyze content using LLM / Local NLP Pipeline
-      const aiResult = await analyzeInteraction(content);
+      const aiResult = await analyzeInteraction(content, explicitAccountName);
       const finalAccountName = explicitAccountName || aiResult.accountName;
 
       // 2. Find or Create Account
@@ -474,13 +474,22 @@ const resolvers = {
       // 6. Create Tasks
       if (aiResult.tasks && aiResult.tasks.length > 0) {
         for (const t of aiResult.tasks) {
-          await prisma.task.create({
-            data: {
+          const existingTask = await prisma.task.findFirst({
+            where: {
               accountId: account.id,
               title: t.title,
-              dueDate: t.dueDate ? new Date(t.dueDate) : null,
-            },
+              completed: false
+            }
           });
+          if (!existingTask) {
+            await prisma.task.create({
+              data: {
+                accountId: account.id,
+                title: t.title,
+                dueDate: t.dueDate ? new Date(t.dueDate) : null,
+              },
+            });
+          }
         }
       }
 
@@ -638,7 +647,8 @@ const resolvers = {
       });
 
       if (transcript) {
-        const aiResult = await analyzeInteraction(transcript);
+        const account = await prisma.account.findUnique({ where: { id: accountId } });
+        const aiResult = await analyzeInteraction(transcript, account?.name);
         const latestMemory = await prisma.accountMemory.findFirst({
           where: { accountId },
           orderBy: { version: 'desc' },
@@ -670,9 +680,14 @@ const resolvers = {
 
         if (aiResult.tasks && aiResult.tasks.length > 0) {
           for (const t of aiResult.tasks) {
-            await prisma.task.create({
-              data: { accountId, title: t.title, dueDate: t.dueDate ? new Date(t.dueDate) : null },
+            const existingTask = await prisma.task.findFirst({
+              where: { accountId, title: t.title, completed: false }
             });
+            if (!existingTask) {
+              await prisma.task.create({
+                data: { accountId, title: t.title, dueDate: t.dueDate ? new Date(t.dueDate) : null },
+              });
+            }
           }
         }
       }
